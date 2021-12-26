@@ -3,13 +3,11 @@ mod test_utils;
 #[cfg(test)]
 mod tests {
     use sqlx::Pool;
-    use rstest::*;
     use actix_web::{web, test, App};
     use rustix::handlers::user_handlers::{greet, get_total_users};
     use rustix::handlers::responses::{GreetResponse, TotalUsersResponse};
-    use crate::test_utils::{f_pool};
+    use crate::test_utils::{get_pool};
 
-    #[rstest]
     #[actix_rt::test]
     async fn test_index_get() {
         let uri = "/";
@@ -26,11 +24,10 @@ mod tests {
         assert_eq!("Hello World", result.msg);
     }
 
-    #[rstest]
     #[actix_rt::test]
-    async fn test_get_total_users(#[future] f_pool: Pool<sqlx::Postgres>) {
+    async fn test_get_total_users() {
         let uri = "/users";
-        let pool = f_pool.await;
+        let pool = get_pool().await;
         let mut app = test::init_service(
             App::new()
                 .app_data(web::Data::new(pool.clone()))

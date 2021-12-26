@@ -34,6 +34,23 @@ impl User {
             .await.expect("Could not add user")
     }
 
+    pub async fn update(user: &User, pool: &PgPool) -> User {
+        sqlx::query_as!(
+                    User,
+                    "UPDATE users SET email = $1, first_name = $2, last_name = $3, active = $4
+                    WHERE id = $5
+                    RETURNING *
+                ",
+                user.email,
+                user.first_name,
+                user.last_name,
+                user.active,
+                user.id
+            )
+            .fetch_one(pool)
+            .await.expect("Could not update user")
+    }
+
     pub async fn delete(uid: i32, pool: &PgPool) -> bool {
         sqlx::query!("
                 DELETE FROM users WHERE id = $1

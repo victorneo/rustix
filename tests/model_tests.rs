@@ -3,43 +3,30 @@ mod test_utils;
 #[cfg(test)]
 mod tests {
     use std::panic;
-    use sqlx::Pool;
-    use rstest::*;
     use rustix::models::user::User;
-    use crate::test_utils::{f_pool};
+    use super::test_utils::{get_pool, get_test_user};
 
-    #[rstest]
     #[actix_rt::test]
-    async fn test_user_get(#[future] f_pool: Pool<sqlx::Postgres>) {
-        let pool = f_pool.await;
-        let email = "email@email.com";
-        let password = "123456";
-
-        let id = sqlx::query!(
-                "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id",
-                &email,
-                &password)
-            .fetch_one(&pool)
-            .await
-            .expect("Did not insert test user").id;
+    async fn test_user_get() {
+        let pool = get_pool().await;
+        let user = get_test_user(&pool).await;
         
-        let user = User::get(id, &pool).await.unwrap();
+        let user = User::get(user.id, &pool).await.unwrap();
 
         let test_result = panic::catch_unwind(|| {
-            assert_eq!(id, user.id);
+            assert_eq!(user.id, user.id);
         });
         
         // Perform cleanup before raising errors
-        sqlx::query!("DELETE FROM users WHERE id = $1", id).execute(&pool).await.expect("Did not delete user");
+        sqlx::query!("DELETE FROM users WHERE id = $1", user.id).execute(&pool).await.expect("Did not delete user");
 
         // Raise assertion error for tests
         assert!(test_result.is_ok());
     }
 
-    #[rstest]
     #[actix_rt::test]
-    async fn test_user_add(#[future] f_pool: Pool<sqlx::Postgres>) {
-        let pool = f_pool.await;
+    async fn test_user_add() {
+        let pool = get_pool().await;
         let email = String::from("user1");
         let password = String::from("1234");
         let user = User::add(&email, &password, &pool).await;
@@ -56,29 +43,40 @@ mod tests {
         assert!(test_result.is_ok());
     }
 
-    #[rstest]
     #[actix_rt::test]
-    async fn test_user_delete(#[future] f_pool: Pool<sqlx::Postgres>) {
-        let pool = f_pool.await;
-        let email = String::from("user1");
-        let password = String::from("1234");
-
-        let id = sqlx::query!(
-                "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id",
-                &email,
-                &password)
-            .fetch_one(&pool)
-            .await
-            .expect("Did not insert test user").id;
+    async fn test_user_update() {
+        let pool = get_pool().await;
+        let mut user = get_test_user(&pool).await;
         
-        let deleted = User::delete(id, &pool).await;
+        user.first_name = Some(String::from("Firsty"));
+        user.last_name = Some(String::from("Lasty"));
+        user.active = Some(false);
+
+        let updated_user = User::update(&user, &pool).await;
+        
+        let test_result = panic::catch_unwind(|| {
+            assert_eq!(user.first_name, updated_user.first_name);
+            assert_eq!(user.last_name, updated_user.last_name);
+            assert_eq!(user.active, updated_user.active);
+        });
+
+        sqlx::query!("DELETE FROM users WHERE id = $1", user.id).execute(&pool).await.expect("Did not delete user");
+        assert!(test_result.is_ok());
+    }
+
+    #[actix_rt::test]
+    async fn test_user_delete() {
+        let pool = get_pool().await;
+        let user = get_test_user(&pool).await;
+        
+        let deleted = User::delete(user.id, &pool).await;
 
         let test_result = panic::catch_unwind(|| {
             assert!(deleted);
         });
         if !test_result.is_ok() {
             // Perform cleanup before raising errors
-            sqlx::query!("DELETE FROM users WHERE id = $1", id).execute(&pool).await.expect("Did not delete user");
+            sqlx::query!("DELETE FROM users WHERE id = $1", user.id).execute(&pool).await.expect("Did not delete user");
             assert!(test_result.is_ok());
         }
     }
