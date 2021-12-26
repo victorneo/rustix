@@ -5,8 +5,8 @@ mod tests {
     use sqlx::Pool;
     use rstest::*;
     use actix_web::{web, test, App};
-    use hanayoku::handlers::user_handlers::{greet, get_total_users};
-    use hanayoku::handlers::responses::{GreetResponse, TotalUsersResponse};
+    use rustix::handlers::user_handlers::{greet, get_total_users};
+    use rustix::handlers::responses::{GreetResponse, TotalUsersResponse};
     use crate::test_utils::{f_pool};
 
     #[rstest]
