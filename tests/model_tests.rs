@@ -55,5 +55,32 @@ mod tests {
         // Raise assertion error for tests
         assert!(test_result.is_ok());
     }
+
+    #[rstest]
+    #[actix_rt::test]
+    async fn test_user_delete(#[future] f_pool: Pool<sqlx::Postgres>) {
+        let pool = f_pool.await;
+        let email = String::from("user1");
+        let password = String::from("1234");
+
+        let id = sqlx::query!(
+                "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id",
+                &email,
+                &password)
+            .fetch_one(&pool)
+            .await
+            .expect("Did not insert test user").id;
+        
+        let deleted = User::delete(id, &pool).await;
+
+        let test_result = panic::catch_unwind(|| {
+            assert!(deleted);
+        });
+        if !test_result.is_ok() {
+            // Perform cleanup before raising errors
+            sqlx::query!("DELETE FROM users WHERE id = $1", id).execute(&pool).await.expect("Did not delete user");
+            assert!(test_result.is_ok());
+        }
+    }
 }
 

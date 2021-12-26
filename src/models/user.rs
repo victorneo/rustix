@@ -8,6 +8,7 @@ pub struct User {
     pub first_name: Option<String>,
     pub last_name: Option<String>,
     pub email: String,
+    #[serde(skip)]
     pub password: String,
     pub active: Option<bool>,
 }
@@ -31,5 +32,15 @@ impl User {
             )
             .fetch_one(pool)
             .await.expect("Could not add user")
+    }
+
+    pub async fn delete(uid: i32, pool: &PgPool) -> bool {
+        sqlx::query!("
+                DELETE FROM users WHERE id = $1
+            ", uid)
+        .execute(pool)
+        .await
+        .expect("Could not delete user")
+        .rows_affected() == 1
     }
 }
