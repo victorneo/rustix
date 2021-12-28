@@ -1,8 +1,8 @@
-use dotenv;
 use sqlx::{PgPool, Pool};
 use rustix::models::user::User;
 use std::env;
 
+#[cfg(test)]
 pub async fn get_pool() -> Pool<sqlx::Postgres> {
     dotenv::dotenv().ok();
     let db_url = env::var("DATABASE_TEST_URL").expect("DATABASE_TEST_URL is not set in .env file");
@@ -13,11 +13,12 @@ pub async fn get_pool() -> Pool<sqlx::Postgres> {
         .await
         .expect("Could not run migrations for testing");
 
-    return f_pool;
+    f_pool
 }
 
-pub async fn get_test_user(pool: &PgPool) -> User {
-    let email = String::from("user1");
+#[allow(dead_code)]
+pub async fn get_test_user(email: &str, pool: &PgPool) -> User {
+    let email = String::from(email);
     let password = String::from("1234");
     sqlx::query_as!(
             User,

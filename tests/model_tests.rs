@@ -9,12 +9,12 @@ mod tests {
     #[actix_rt::test]
     async fn test_user_get() {
         let pool = get_pool().await;
-        let user = get_test_user(&pool).await;
+        let user = get_test_user("getuser@get.com", &pool).await;
         
-        let user = User::get(user.id, &pool).await.unwrap();
+        let got_user = User::get(user.id, &pool).await.unwrap();
 
         let test_result = panic::catch_unwind(|| {
-            assert_eq!(user.id, user.id);
+            assert_eq!(user.id, got_user.id);
         });
         
         // Perform cleanup before raising errors
@@ -27,7 +27,7 @@ mod tests {
     #[actix_rt::test]
     async fn test_user_add() {
         let pool = get_pool().await;
-        let email = String::from("user1");
+        let email = String::from("adduser@get.com");
         let password = String::from("1234");
         let user = User::add(&email, &password, &pool).await;
 
@@ -46,7 +46,7 @@ mod tests {
     #[actix_rt::test]
     async fn test_user_update() {
         let pool = get_pool().await;
-        let mut user = get_test_user(&pool).await;
+        let mut user = get_test_user("updateuser@get.com", &pool).await;
         
         user.first_name = Some(String::from("Firsty"));
         user.last_name = Some(String::from("Lasty"));
@@ -67,7 +67,7 @@ mod tests {
     #[actix_rt::test]
     async fn test_user_delete() {
         let pool = get_pool().await;
-        let user = get_test_user(&pool).await;
+        let user = get_test_user("deleteuser@get.com", &pool).await;
         
         let deleted = User::delete(user.id, &pool).await;
 

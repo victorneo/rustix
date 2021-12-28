@@ -2,11 +2,10 @@ mod test_utils;
 
 #[cfg(test)]
 mod tests {
-    use sqlx::Pool;
     use actix_web::{web, test, App};
     use rustix::handlers::user_handlers::{greet, get_total_users};
     use rustix::handlers::responses::{GreetResponse, TotalUsersResponse};
-    use crate::test_utils::{get_pool};
+    use crate::test_utils::get_pool;
 
     #[actix_rt::test]
     async fn test_index_get() {
