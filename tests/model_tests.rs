@@ -11,12 +11,12 @@ mod tests {
         let pool = get_pool().await;
         let user = get_test_user("getuser@get.com", &pool).await;
         
-        let got_user = User::get(user.id, &pool).await.unwrap();
+        let got_user = User::get(user.id, &pool).await.expect("Could not get user from DB"); 
 
         let test_result = panic::catch_unwind(|| {
             assert_eq!(user.id, got_user.id);
         });
-        
+
         // Perform cleanup before raising errors
         sqlx::query!("DELETE FROM users WHERE id = $1", user.id).execute(&pool).await.expect("Did not delete user");
 

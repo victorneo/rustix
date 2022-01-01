@@ -16,11 +16,11 @@ pub struct User {
 
 impl User {
     pub async fn get(uid: i32, pool: &PgPool) -> Result<Self, Error> {
-        Ok(sqlx::query_as!(User, "
+        sqlx::query_as!(User, "
             SELECT
                 *
             FROM users WHERE id = $1
-        ", uid).fetch_one(pool).await?)
+        ", uid).fetch_one(pool).await
     }
 
     pub async fn add(email: &String, password: &String, pool: &PgPool) -> User {

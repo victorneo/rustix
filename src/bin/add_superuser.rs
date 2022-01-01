@@ -17,6 +17,6 @@ async fn main() {
         let pool = PgPool::connect(&db_url).await.expect("Could not create DB connection pool");
 
         User::add_superuser(&username, &String::from("newpassword"), &pool).await;
-        println!("Added superuser {}", username);
+        println!("Added superuser {} with password newpassword", username);
     }
 }
