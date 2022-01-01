@@ -41,6 +41,19 @@ mod tests {
 
         // Raise assertion error for tests
         assert!(test_result.is_ok());
+
+
+        // Test add_superuser
+        let user = User::add_superuser(&email, &password, &pool).await;
+
+        let test_result = panic::catch_unwind(|| {
+            assert_eq!(email, user.email);
+            assert_ne!(password, user.password);
+            assert!(user.superuser.unwrap());
+        });
+
+        sqlx::query!("DELETE FROM users WHERE id = $1", user.id).execute(&pool).await.expect("Did not delete user");
+        assert!(test_result.is_ok());
     }
 
     #[actix_rt::test]

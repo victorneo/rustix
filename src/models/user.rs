@@ -11,6 +11,7 @@ pub struct User {
     #[serde(skip)]
     pub password: String,
     pub active: Option<bool>,
+    pub superuser: Option<bool>,
 }
 
 impl User {
@@ -32,6 +33,19 @@ impl User {
             )
             .fetch_one(pool)
             .await.expect("Could not add user")
+    }
+
+    pub async fn add_superuser(email: &String, password: &String, pool: &PgPool) -> User {
+        let hashed = hash(password, DEFAULT_COST).expect("Could not hash password");
+        sqlx::query_as!(
+                User,
+                "INSERT INTO users (email, password, superuser) VALUES ($1, $2, $3) RETURNING *",
+                email,
+                hashed,
+                true,
+            )
+            .fetch_one(pool)
+            .await.expect("Could not add superuser")
     }
 
     pub async fn update(user: &User, pool: &PgPool) -> User {
